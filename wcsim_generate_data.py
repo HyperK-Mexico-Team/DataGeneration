@@ -51,7 +51,7 @@ class sWCSimGenerateData(object):
         parser.add_argument("-rd", "--random_direction", dest="random_direction", action="store_true",
                             help="Generates random initial directions for particle.")
         parser.add_argument("-rp", "--random_position", dest="random_position", action="store_true",
-                            help="Generates random initial direction for particle.")
+                            help="Generates random initial positions in the tank for the particle.")
         parser.add_argument("-sd", "--swept_direction", dest="swept_direction", action="store_true",
                             help="Generates simulations in disctints angles ( in order ) in the plane xy.")
         self._args = parser.parse_args()
@@ -261,7 +261,12 @@ class sWCSimGenerateData(object):
                 angle_offset = random.random() * 2 * math.pi
             for batch in range(self._args.batch):
                 gen_id = str(batch) if batch >= 10 else "0{0}".format(batch)
-
+                
+                if self._args.random_position:
+                    px =  200 * random.random() - 100
+                    py =  200 * random.random() - 100
+                    pz =  200 * random.random() - 100
+                    position = [px, py, pz]
                 if self._args.random_direction:
                     x = random.random()
                     y = random.random()
@@ -276,9 +281,9 @@ class sWCSimGenerateData(object):
                     energ = strEnergy.replace(" ", "_")
                     output_name_file = f"wcsim_output_{self._args.particle}_{energ}_{gen_id}.root"
 
-                print("id:", gen_id, "number of events:", self._args.events,
-                      "particle:", self._args.particle, "energy:", strEnergy, "direction:", direction,
-                      "position:", position, "geometry:", self._args.geometry, "output file:", output_name_file)
+                print("id:", gen_id, ", number of events:", self._args.events,
+                      ", particle:", self._args.particle, ", energy:", strEnergy, ", direction:", direction,
+                      ", position:", position, ", geometry:", self._args.geometry, ", output file:", output_name_file)
                 self.generate_macro(self._args.particle, strEnergy, self._args.events, direction, position,
                                     output_dir_name, output_name_file, geometry=self._args.geometry)
                 subprocess.run(["./WCSim", "WCSim.mac"], shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -287,4 +292,3 @@ class sWCSimGenerateData(object):
 if __name__ == '__main__':
     _script = sWCSimGenerateData()
     _script.execute()
-
