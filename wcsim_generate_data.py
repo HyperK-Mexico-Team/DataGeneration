@@ -44,6 +44,8 @@ class sWCSimGenerateData(object):
                            help="Set MAX energy of the range of simulations, in MeV")
         parser.add_argument("-o", type=str, dest="output_file", default=None,
                             help="Output file name. Default: results/wcsim_output_<particle>_<energy>_<gen_id>.root")
+        parser.add_argument("-di", "--directory-destination", type=str,
+                            dest="relative_dir_name", default="", help="Name of relative directory for output.")
         parser.add_argument("-d", "--direction", dest="direction",
                             type=float, nargs=3, help="Initial direction of particle. Default: 1,0,0")
         parser.add_argument("-p", "--position", dest="position",
@@ -58,15 +60,15 @@ class sWCSimGenerateData(object):
 
     def get_str_energy(self, x):
         if x < 0.001:
-            return "{} eV".format(x * 1000000)
+            return "{} eV".format(round(x * 1000000, 4))
         if x < 1:
-            return "{} keV".format(x * 1000)
+            return "{} keV".format(round(x * 1000, 4))
         if x < 1000:
-            return "{} MeV".format(x)
+            return "{} MeV".format(round(x, 4))
         if x < 1000000:
-            return "{} GeV".format(x / 1000.0)
+            return "{} GeV".format(round(x / 1000.0, 4))
         else:
-            return "{} TeV".format(x / 1000000.0)
+            return "{} TeV".format(round(x / 1000000.0, 4))
 
     def generate_macro(self, particle, energy, events, direction, position, output_dir_name,
                        output_file_name, geometry=None):
@@ -161,7 +163,7 @@ class sWCSimGenerateData(object):
             macro.write("# /DarkRate/SetDarkLow to /DarkRate/SetDarkHigh [time in ns]\n")
             macro.write("# /DarkRate/SetDarkMode 1 adds dark noise hits to a window of\n")
             macro.write("# width /DarkRate/SetDarkWindow [time in ns] around each hit\n")
-            macro.write("# i.e. hit time ± (/DarkRate/SetDarkWindow) / 2\n")
+            macro.write("# i.e. hit time +- (/DarkRate/SetDarkWindow) / 2\n")
             macro.write("/DarkRate/SetDarkMode 1\n")
             macro.write("/DarkRate/SetDarkHigh 100000\n")
             macro.write("/DarkRate/SetDarkLow 0\n")
@@ -238,7 +240,7 @@ class sWCSimGenerateData(object):
 
     def execute(self):
         path = os.path.dirname(os.path.abspath(__file__))
-        output_dir_name = "results"
+        output_dir_name = "./results" + self._args.relative_dir_name
         os.makedirs(os.path.join(path, output_dir_name), exist_ok=True)
 
         if self._args.direction:
@@ -261,7 +263,7 @@ class sWCSimGenerateData(object):
                 angle_offset = random.random() * 2 * math.pi
             for batch in range(self._args.batch):
                 gen_id = str(batch) if batch >= 10 else "0{0}".format(batch)
-                
+
                 if self._args.random_position:
                     px =  200 * random.random() - 100
                     py =  200 * random.random() - 100
